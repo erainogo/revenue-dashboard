@@ -1,26 +1,19 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"encoding/csv"
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
-	"sync"
 	"syscall"
-	"time"
-
-	"go.uber.org/zap"
 
 	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
 	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
+	"github.com/erainogo/revenue-dashboard/internal/handlers"
 	"github.com/erainogo/revenue-dashboard/pkg/constants"
-	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
 func main() {
@@ -67,7 +60,7 @@ func main() {
 		logger.Info("Server gracefully stopped")
 	}()
 
-	repository := repositories.NewTransactionRepository(ctx,
+	transactionRepository := repositories.NewTransactionRepository(ctx,
 		mongoClient.Database(*config.Config.MongoDBDatabase).
 			Collection(*config.Config.MongoTransactionCollectionName),
 		repositories.WithLogger(logger))
@@ -82,126 +75,21 @@ func main() {
 
 	service := services.NewIngestService(
 		ctx,
-		repository,
+		transactionRepository,
 		productSummeryRepository,
 		countryAggregator,
 		services.WithLoggerI(logger))
+
+	handler := handlers.NewCli(ctx, service, handlers.WithLoggerC(logger))
 
 	inputPath := os.Args[1]
 
 	logger.Info("Started ingesting report")
 
-	file, err := os.Open(inputPath)
+	err = handler.Ingest(ctx, inputPath)
 	if err != nil {
-		logger.Errorf("Failed to open input file")
-
-		os.Exit(1)
-	}
-
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			logger.Error("failed to close file", zap.Error(err))
-		}
-	}(file)
-
-	// to reduce read() system calls use bufio
-	// It reads large chunks of data into memory and then serves that buffer to the consumer
-	r := csv.NewReader(bufio.NewReader(file))
-	_, err = r.Read()
-	if err != nil {
-		logger.Errorf("Failed reading csv")
-
-		os.Exit(1)
-	}
-
-	// wg for wait all ingest workers to be done
-	var wg sync.WaitGroup
-	//make channel to send transactions .
-	tc := make(chan entities.Transaction, 500)
-	// deploy a worker pool for concurrent run ingestion
-	for i := 0; i < constants.WorkerCount; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			service.IngestTransactionData(ctx, tc)
-		}()
-	}
-
-	ln := 0
-	sln := 0
-
-	for {
-		record, err := r.Read()
-		if err != nil {
-			break
-		}
-
-		ln++
-
-		tx, err := parseRecord(record)
-		if err != nil {
-			logger.Warnf("Skipping line %d: %v", ln, err)
-
-			sln++
-
-			continue
-		}
-		// send record to the channel
-		tc <- tx
-	}
-
-	logger.Info("Finished sending transactions, closing channel")
-	// close channel when done.
-	close(tc)
-
-	wg.Wait()
-
-	logger.Info("All ingestion workers done")
-
-	err = service.IngestProductSummery(ctx)
-	if err != nil {
-		logger.Warnf("Failed to insert bulk product summery: %v", err)
-
 		return
 	}
 
-	logger.Infof("total number of %v lines has been processed ", ln)
-	logger.Infof("total number of  %v lines has been skipped ", sln)
 	logger.Info("Ingestion completed successfully.")
-}
-
-func parseRecord(record []string) (entities.Transaction, error) {
-	transactionDate, err := time.Parse(constants.TimeLayout, record[1])
-	if err != nil {
-		return entities.Transaction{}, err
-	}
-
-	price, _ := strconv.ParseFloat(record[8], 64)
-	quantity, _ := strconv.Atoi(record[9])
-	totalPrice, _ := strconv.ParseFloat(record[10], 64)
-	stockQuantity, _ := strconv.Atoi(record[11])
-	addedDate, err := time.Parse(constants.TimeLayout, record[12])
-
-	if err != nil {
-		return entities.Transaction{}, err
-	}
-
-	return entities.Transaction{
-		TransactionID:   record[0],
-		TransactionDate: transactionDate,
-		UserID:          record[2],
-		Country:         record[3],
-		Region:          record[4],
-		Product: entities.Product{
-			ID:            record[5],
-			Name:          record[6],
-			Category:      record[7],
-			StockQuantity: stockQuantity,
-		},
-		Price:      price,
-		Quantity:   quantity,
-		TotalPrice: totalPrice,
-		AddedDate:  addedDate,
-	}, nil
 }
