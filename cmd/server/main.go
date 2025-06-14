@@ -86,12 +86,7 @@ func main() {
 		return
 	}
 
-	// create transactionRepository for db access layer.
-	transactionRepository := repositories.NewTransactionRepository(ctx,
-		mongoClient.Database(*config.Config.MongoDBDatabase).
-			Collection(*config.Config.MongoTransactionCollectionName),
-		repositories.WithLogger(logger))
-
+	// create repositories for db access layer.
 	productSummeryRepository := repositories.NewProductSummeryRepository(ctx,
 		mongoClient.Database(*config.Config.MongoDBDatabase).
 			Collection(*config.Config.MongoCountryProductSummaryCollection),
@@ -102,7 +97,6 @@ func main() {
 
 	service := services.NewInsightService(
 		ctx,
-		transactionRepository,
 		productSummeryRepository,
 		countryAggregator,
 		services.WithLogger(logger))

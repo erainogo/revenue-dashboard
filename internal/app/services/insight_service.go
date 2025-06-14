@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	
+
 	"go.uber.org/zap"
 
 	"github.com/erainogo/revenue-dashboard/internal/core/adapters"
@@ -12,7 +12,6 @@ import (
 type InsightService struct {
 	ctx                      context.Context
 	logger                   *zap.SugaredLogger
-	transactionRepository    adapters.TransactionRepository
 	productSummeryRepository adapters.ProductSummeryRepository
 	countryAggregator        adapters.CountryRevenueAggregator
 }
@@ -27,14 +26,12 @@ func WithLogger(logger *zap.SugaredLogger) InsightServiceOptions {
 
 func NewInsightService(
 	ctx context.Context,
-	transactionRepository adapters.TransactionRepository,
 	productSummeryRepository adapters.ProductSummeryRepository,
 	countryAggregator adapters.CountryRevenueAggregator,
 	opts ...InsightServiceOptions,
 ) adapters.InsightService {
 	svc := &InsightService{
 		ctx:                      ctx,
-		transactionRepository:    transactionRepository,
 		productSummeryRepository: productSummeryRepository,
 		countryAggregator:        countryAggregator,
 	}
