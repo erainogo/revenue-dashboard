@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/erainogo/revenue-dashboard/cmd"
+	"github.com/erainogo/revenue-dashboard/cmd/init"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
 	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
@@ -22,14 +22,20 @@ import (
 )
 
 func main() {
-	logger := cmd.SetUpLogger()
+	if len(os.Args) < constants.ARGS {
+		fmt.Println("please provide input file: <input.csv>")
+
+		os.Exit(1)
+	}
+
+	logger := init.SetUpLogger()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
-	mongoClient, err := cmd.CreateMongoClient(ctx, logger)
+	mongoClient, err := init.CreateMongoClient(ctx, logger)
 
 	if err != nil {
 		logger.Fatal("failed to connect to mongo: %v", err)
@@ -62,19 +68,13 @@ func main() {
 	service := services.NewInsightService(
 		ctx, repository, services.WithLogger(logger))
 
-	if len(os.Args) < constants.ARGS {
-		fmt.Println("Usage: <input.csv>")
-
-		os.Exit(1)
-	}
-
 	inputPath := os.Args[1]
 
 	logger.Info("Started ingesting report")
 
 	file, err := os.Open(inputPath)
 	if err != nil {
-		fmt.Println("Failed to open input file")
+		logger.Errorf("Failed to open input file")
 
 		os.Exit(1)
 	}
@@ -91,7 +91,7 @@ func main() {
 	r := csv.NewReader(bufio.NewReader(file))
 	_, err = r.Read()
 	if err != nil {
-		fmt.Println("Failed reading csv")
+		logger.Errorf("Failed reading csv")
 
 		os.Exit(1)
 	}
@@ -100,7 +100,7 @@ func main() {
 	var wg sync.WaitGroup
 	//make channel to send transactions .
 	tc := make(chan entities.Transaction, 500)
-
+    // close channel when done.
 	defer close(tc)
 	// deploy a worker pool for concurrent run ingestion
 	for i := 0; i < constants.WorkerCount; i++ {
@@ -133,7 +133,7 @@ func main() {
 
 	wg.Wait()
 
-	logger.Infof("line %v has been processed", ln)
+	logger.Infof("total number of %v lines has been processed", ln)
 
 	logger.Info("Ingestion completed successfully.")
 
