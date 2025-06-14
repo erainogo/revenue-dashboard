@@ -80,12 +80,12 @@ func main() {
 	countryAggregator := aggregators.NewCountryRevenueAggregator(
 		ctx, productSummeryRepository, aggregators.WithLogger(logger))
 
-	service := services.NewInsightService(
+	service := services.NewIngestService(
 		ctx,
 		repository,
 		productSummeryRepository,
 		countryAggregator,
-		services.WithLogger(logger))
+		services.WithLoggerI(logger))
 
 	inputPath := os.Args[1]
 
