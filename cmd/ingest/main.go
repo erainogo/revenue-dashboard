@@ -169,8 +169,6 @@ func main() {
 	logger.Infof("total number of %v lines has been processed ", ln)
 	logger.Infof("total number of  %v lines has been skipped ", sln)
 	logger.Info("Ingestion completed successfully.")
-
-	return
 }
 
 func parseRecord(record []string) (entities.Transaction, error) {

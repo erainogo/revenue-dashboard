@@ -5,6 +5,6 @@ import (
 )
 
 type CountryRevenueAggregator interface {
-    Aggregate(key entities.Transaction)
+    Aggregate(tx entities.Transaction)
 	GetOutput() map[entities.SummaryKey]*entities.CountryLevelRevenue
 }

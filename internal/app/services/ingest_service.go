@@ -51,6 +51,7 @@ func NewIngestService(
 // prevents memory leaks and ensures the goroutine exits cleanly.
 // creates a slice of data to insert to the db as a batch. fixed size 500 - batch size.
 // reuse the same slice to avoid reallocating memory to a new slice.
+// also update the summery map to later ingest precalculated country product summery data.
 func (i IngestService) IngestTransactionData(ctx context.Context, tc <-chan entities.Transaction) {
 	select {
 	case <-ctx.Done():

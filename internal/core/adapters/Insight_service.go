@@ -7,5 +7,5 @@ import (
 )
 
 type InsightService interface {
-	 GetCountryLevelRevenue(ctx context.Context,  page int, limit int) ([]*entities.CountryLevelRevenue, error)
+	GetCountryLevelRevenue(ctx context.Context, page int, limit int) ([]*entities.CountryLevelRevenue, error)
 }

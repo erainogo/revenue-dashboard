@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/erainogo/revenue-dashboard/pkg/constants"
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
@@ -16,8 +17,8 @@ func (h *HttpServer) GetCountryLevelRevenueHandler(ctx context.Context) func(htt
 		pageStr := query.Get("page")
 		limitStr := query.Get("limit")
 
-		page := 1
-		limit := 50
+		page := constants.FirstPage
+		limit := constants.PaginationCount
 
 		if pageStr != "" {
 			if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
