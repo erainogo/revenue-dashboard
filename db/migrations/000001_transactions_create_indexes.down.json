@@ -1,0 +1,10 @@
+[
+  {
+    "dropIndexes": "transactions",
+    "index": "tenantId_reportId_index"
+  },
+  {
+    "dropIndexes": "transactions",
+    "index": "tenantId_reportType_index"
+  }
+]

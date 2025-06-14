@@ -1,0 +1,46 @@
+[
+  {
+    "createIndexes": "transactions",
+    "indexes": [
+
+      {
+        "key": {
+          "country": 1,
+          "product.name" : 1,
+          "total_price": 1
+        },
+        "name": "country_product_total_price_index",
+        "background": true
+      },
+
+      {
+        "key": {
+          "product.name": 1,
+          "quantity" : 1,
+          "product.stock_quantity": 1
+        },
+        "name": "product_quantity_stock_quantity_index",
+        "background": true
+      },
+
+      {
+        "key": {
+          "transaction_date": 1,
+          "quantity" : 1
+        },
+        "name": "transaction_date_quantity_index",
+        "background": true
+      },
+
+      {
+        "key": {
+          "region": 1,
+          "total_price" :1,
+          "quantity": 1
+        },
+        "name": "region_total_price_quantity_index",
+        "background": true
+      }
+    ]
+  }
+]
