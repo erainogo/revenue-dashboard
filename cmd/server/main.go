@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 
+	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
 	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
@@ -26,11 +25,7 @@ func main() {
 	// context for the application
 	ctx, cancel := context.WithCancel(context.Background())
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%v", *config.Config.HttpPort),
-		WriteTimeout: time.Duration(*config.Config.WriteTimeOut) * time.Second,
-		ReadTimeout:  time.Duration(*config.Config.ReadTimeOut) * time.Second,
-	}
+	srv := initializations.SetUpServer()
 
 	mongoClient, err := initializations.CreateMongoClient(ctx, logger)
 

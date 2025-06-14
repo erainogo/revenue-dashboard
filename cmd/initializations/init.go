@@ -3,8 +3,10 @@ package initializations
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -33,9 +35,9 @@ func RunMigration(client *mongo.Client) error {
 		return err
 	}
 
-	exec, _ := os.Executable()
-
-	migPath := filepath.Join(filepath.Dir(exec), "db", "migrations")
+	wd, _ := os.Getwd()
+	migPath := filepath.Join(wd, "..", "..", "db", "migrations")
+	migPath, _ = filepath.Abs(migPath)
 
 	mig, err := migrate.NewWithDatabaseInstance(
 		fmt.Sprintf("file:%s", migPath),
@@ -75,4 +77,12 @@ func CreateMongoClient(ctx context.Context, logger *zap.SugaredLogger) (*mongo.C
 	}
 
 	return client, nil
+}
+
+func SetUpServer() *http.Server {
+	return &http.Server{
+		Addr:         fmt.Sprintf(":%v", *config.Config.HttpPort),
+		WriteTimeout: time.Duration(*config.Config.WriteTimeOut) * time.Second,
+		ReadTimeout:  time.Duration(*config.Config.ReadTimeOut) * time.Second,
+	}
 }
