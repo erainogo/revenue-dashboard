@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +27,11 @@ func main() {
 	// context for the application
 	ctx, cancel := context.WithCancel(context.Background())
 
-	srv := initializations.SetUpServer()
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%v", *config.Config.HttpPort),
+		WriteTimeout: time.Duration(*config.Config.WriteTimeOut) * time.Second,
+		ReadTimeout:  time.Duration(*config.Config.ReadTimeOut) * time.Second,
+	}
 
 	mongoClient, err := initializations.CreateMongoClient(ctx, logger)
 
@@ -80,14 +86,26 @@ func main() {
 		return
 	}
 
-	// create repository for db access layer.
-	repository := repositories.NewTransactionRepository(ctx,
+	// create transactionRepository for db access layer.
+	transactionRepository := repositories.NewTransactionRepository(ctx,
 		mongoClient.Database(*config.Config.MongoDBDatabase).
 			Collection(*config.Config.MongoTransactionCollectionName),
 		repositories.WithLogger(logger))
 
+	productSummeryRepository := repositories.NewProductSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoCountryProductSummaryCollection),
+		repositories.WithLoggerP(logger))
+
+	countryAggregator := aggregators.NewCountryRevenueAggregator(
+		ctx, productSummeryRepository, aggregators.WithLogger(logger))
+
 	service := services.NewInsightService(
-		ctx, repository, services.WithLogger(logger))
+		ctx,
+		transactionRepository,
+		productSummeryRepository,
+		countryAggregator,
+		services.WithLogger(logger))
 
 	// register routes for insights
 	srv.Handler = handlers.NewHttpServer(

@@ -20,6 +20,7 @@ import (
 	"github.com/erainogo/revenue-dashboard/internal/config"
 	"github.com/erainogo/revenue-dashboard/pkg/constants"
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
+	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 )
 
 func main() {
@@ -71,8 +72,20 @@ func main() {
 			Collection(*config.Config.MongoTransactionCollectionName),
 		repositories.WithLogger(logger))
 
+	productSummeryRepository := repositories.NewProductSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoCountryProductSummaryCollection),
+		repositories.WithLoggerP(logger))
+
+	countryAggregator := aggregators.NewCountryRevenueAggregator(
+		ctx, productSummeryRepository, aggregators.WithLogger(logger))
+
 	service := services.NewInsightService(
-		ctx, repository, services.WithLogger(logger))
+		ctx,
+		repository,
+		productSummeryRepository,
+		countryAggregator,
+		services.WithLogger(logger))
 
 	inputPath := os.Args[1]
 
@@ -106,8 +119,6 @@ func main() {
 	var wg sync.WaitGroup
 	//make channel to send transactions .
 	tc := make(chan entities.Transaction, 500)
-    // close channel when done.
-	defer close(tc)
 	// deploy a worker pool for concurrent run ingestion
 	for i := 0; i < constants.WorkerCount; i++ {
 		wg.Add(1)
@@ -140,14 +151,26 @@ func main() {
 		tc <- tx
 	}
 
+	logger.Info("Finished sending transactions, closing channel")
+	// close channel when done.
+	close(tc)
+
 	wg.Wait()
+
+	logger.Info("All ingestion workers done")
+
+	err = service.InsertBulkProductSummery(ctx)
+	if err != nil {
+		logger.Warnf("Failed to insert bulk product summery: %v", err)
+
+		return
+	}
 
 	logger.Infof("total number of %v lines has been processed ", ln)
 	logger.Infof("total number of  %v lines has been skipped ", sln)
-
 	logger.Info("Ingestion completed successfully.")
 
-    return
+	return
 }
 
 func parseRecord(record []string) (entities.Transaction, error) {

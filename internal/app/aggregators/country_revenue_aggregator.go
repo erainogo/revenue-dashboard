@@ -1,0 +1,75 @@
+package aggregators
+
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/erainogo/revenue-dashboard/internal/core/adapters"
+	"github.com/erainogo/revenue-dashboard/pkg/entities"
+	"go.uber.org/zap"
+)
+
+type CountryRevenueAggregator struct {
+	ctx                      context.Context
+	logger                   *zap.SugaredLogger
+	productSummeryRepository adapters.ProductSummeryRepository
+	SummeryMap               map[entities.SummaryKey]*entities.CountryLevelRevenue 	// in memory cache to calculate revenue by country summery
+	mutex                    sync.Mutex
+}
+
+type CountryRevenueAggregatorOptions func(*CountryRevenueAggregator)
+
+func WithLogger(logger *zap.SugaredLogger) CountryRevenueAggregatorOptions {
+	return func(s *CountryRevenueAggregator) {
+		s.logger = logger
+	}
+}
+
+func NewCountryRevenueAggregator(
+	ctx context.Context,
+	productSummeryRepository adapters.ProductSummeryRepository,
+	opts ...CountryRevenueAggregatorOptions,
+) adapters.CountryRevenueAggregator {
+	svc := &CountryRevenueAggregator{
+		ctx:                      ctx,
+		productSummeryRepository: productSummeryRepository,
+		SummeryMap:               make(map[entities.SummaryKey]*entities.CountryLevelRevenue),
+	}
+
+	for _, opt := range opts {
+		opt(svc)
+	}
+
+	return svc
+}
+
+func (s *CountryRevenueAggregator) Aggregate(tx entities.Transaction) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	key := entities.SummaryKey{Country: tx.Country, ProductName: tx.Product.Name}
+
+	if _, exists := s.SummeryMap[key]; !exists {
+		s.SummeryMap[key] = &entities.CountryLevelRevenue{
+			Country:          tx.Country,
+			ProductName:      tx.Product.Name,
+			TotalRevenue:     0,
+			TransactionCount: 0,
+			UpdatedAt:        time.Now(),
+		}
+	}
+
+	summary := s.SummeryMap[key]
+	summary.TotalRevenue += tx.TotalPrice
+	summary.TransactionCount++
+}
+
+func (s *CountryRevenueAggregator) GetOutput(
+	) map[entities.SummaryKey]*entities.CountryLevelRevenue {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	return s.SummeryMap
+}
+

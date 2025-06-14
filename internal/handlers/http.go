@@ -31,14 +31,16 @@ func NewHttpServer(
 	opts ...HttpServerOptions,
 ) *HttpServer {
 	server := &HttpServer{
-		ctx: ctx,
+		ctx:     ctx,
 		service: service,
-		mux: http.NewServeMux(),
+		mux:     http.NewServeMux(),
 	}
 
 	for _, opt := range opts {
 		opt(server)
 	}
+
+	server.registerRoutes(ctx)
 
 	return server
 }

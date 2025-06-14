@@ -3,10 +3,8 @@ package initializations
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -77,12 +75,4 @@ func CreateMongoClient(ctx context.Context, logger *zap.SugaredLogger) (*mongo.C
 	}
 
 	return client, nil
-}
-
-func SetUpServer() *http.Server {
-	return &http.Server{
-		Addr:         fmt.Sprintf(":%v", *config.Config.HttpPort),
-		WriteTimeout: time.Duration(*config.Config.WriteTimeOut) * time.Second,
-		ReadTimeout:  time.Duration(*config.Config.ReadTimeOut) * time.Second,
-	}
 }

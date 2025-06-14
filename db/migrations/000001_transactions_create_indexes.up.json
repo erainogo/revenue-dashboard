@@ -6,10 +6,9 @@
       {
         "key": {
           "country": 1,
-          "product.name" : 1,
-          "total_price": 1
+          "product.name" : 1
         },
-        "name": "country_product_total_price_index",
+        "name": "country_product_name_index",
         "background": true
       },
 

@@ -14,16 +14,17 @@ const (
 )
 
 type Configuration struct {
-	Prefix                          *string //nolint:goimports,gofmt
-	HttpPort                        *string
-	BootUpWaitTime                  *int
-	WriteTimeOut                    *int
-	ReadTimeOut                     *int
-	MongoDBEndpoint                 *string
-	MongoDBDatabase                 *string
-	FEURL                           *string
-	MongoTransactionCollectionName  *string
-	MongoDBMigrate                  *bool
+	Prefix                               *string //nolint:goimports,gofmt
+	HttpPort                             *string
+	BootUpWaitTime                       *int
+	WriteTimeOut                         *int
+	ReadTimeOut                          *int
+	MongoDBEndpoint                      *string
+	MongoDBDatabase                      *string
+	FEURL                                *string
+	MongoTransactionCollectionName       *string
+	MongoDBMigrate                       *bool
+	MongoCountryProductSummaryCollection *string
 }
 
 var (
@@ -73,6 +74,11 @@ var (
 		"transactions-collection",
 		"transactions",
 		"transactions Mongodb Collection")
+
+	mongoCountryProductSummaryCollection = flag.String(
+		"country-product-summary-collection",
+		"country_product_summary",
+		"country product summary Mongodb Collection")
 
 	feUrl = flag.String(
 		"fe-url",
@@ -125,6 +131,7 @@ func init() {
 		BootUpWaitTime:                 bootupWaittime,
 		FEURL:                          feUrl,
 		MongoTransactionCollectionName: mongoTransactionCollection,
+		MongoCountryProductSummaryCollection: mongoCountryProductSummaryCollection,
 		MongoDBMigrate:                 mongoDBMigrate,
 		MongoDBEndpoint:                mongoDBEndpoint,
 		MongoDBDatabase:                mongoDBDatabase,

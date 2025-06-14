@@ -30,7 +30,7 @@ func NewTransactionRepository(
 	opts ...TransactionRepositoryOptions,
 ) adapters.TransactionRepository {
 	svc := &TransactionRepository{
-		ctx: ctx,
+		ctx:        ctx,
 		collection: col,
 	}
 

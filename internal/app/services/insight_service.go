@@ -2,17 +2,19 @@ package services
 
 import (
 	"context"
-	"github.com/erainogo/revenue-dashboard/pkg/constants"
-	"github.com/erainogo/revenue-dashboard/pkg/entities"
 	"go.uber.org/zap"
 
 	"github.com/erainogo/revenue-dashboard/internal/core/adapters"
+	"github.com/erainogo/revenue-dashboard/pkg/constants"
+	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
 type InsightService struct {
-	ctx        context.Context
-	logger     *zap.SugaredLogger
-	repository adapters.TransactionRepository
+	ctx                      context.Context
+	logger                   *zap.SugaredLogger
+	transactionRepository    adapters.TransactionRepository
+	productSummeryRepository adapters.ProductSummeryRepository
+	countryAggregator        adapters.CountryRevenueAggregator
 }
 
 type InsightServiceOptions func(*InsightService)
@@ -25,12 +27,16 @@ func WithLogger(logger *zap.SugaredLogger) InsightServiceOptions {
 
 func NewInsightService(
 	ctx context.Context,
-	repository adapters.TransactionRepository,
+	transactionRepository adapters.TransactionRepository,
+	productSummeryRepository adapters.ProductSummeryRepository,
+	countryAggregator adapters.CountryRevenueAggregator,
 	opts ...InsightServiceOptions,
 ) adapters.InsightService {
 	svc := &InsightService{
-		ctx:        ctx,
-		repository: repository,
+		ctx:                      ctx,
+		transactionRepository:    transactionRepository,
+		productSummeryRepository: productSummeryRepository,
+		countryAggregator:        countryAggregator,
 	}
 
 	for _, opt := range opts {
@@ -48,7 +54,7 @@ func NewInsightService(
 func (i *InsightService) IngestData(ctx context.Context, tc <-chan entities.Transaction) {
 	select {
 	case <-ctx.Done():
-        i.logger.Infow("context done", "error", ctx.Err())
+		i.logger.Infow("context done", "error", ctx.Err())
 
 		return
 	default:
@@ -58,10 +64,16 @@ func (i *InsightService) IngestData(ctx context.Context, tc <-chan entities.Tran
 		for tx := range tc {
 			batch = append(batch, tx)
 
+			i.countryAggregator.Aggregate(tx)
+
 			if len(batch) >= constants.BatchSize {
-				err := i.repository.BulkInsert(ctx, batch)
+				err := i.transactionRepository.BulkInsert(ctx, batch)
 				if err != nil {
 					i.logger.Errorf("Insert error: %v", err)
+				}
+
+				if err != nil {
+					return
 				}
 
 				//reset the slice.
@@ -70,11 +82,35 @@ func (i *InsightService) IngestData(ctx context.Context, tc <-chan entities.Tran
 		}
 
 		if len(batch) > 0 {
-			err := i.repository.BulkInsert(ctx, batch)
+			err := i.transactionRepository.BulkInsert(ctx, batch)
 
 			if err != nil {
 				i.logger.Errorf("Final insert error: %v", err)
 			}
 		}
 	}
+}
+
+func (i *InsightService) GetCountryLevelRevenue(
+	ctx context.Context,
+	page int,
+	limit int) ([]*entities.CountryLevelRevenue, error) {
+	aggregator, err := i.productSummeryRepository.GetCountryLevelRevenueSortedByTotal(
+		ctx, page, limit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregator, nil
+}
+
+func (i *InsightService) InsertBulkProductSummery(ctx context.Context) error {
+	err := i.productSummeryRepository.BulkInsert(ctx, i.countryAggregator.GetOutput())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,10 +1,18 @@
 [
   {
     "dropIndexes": "transactions",
-    "index": "tenantId_reportId_index"
+    "index": "country_product_name_index"
   },
   {
     "dropIndexes": "transactions",
-    "index": "tenantId_reportType_index"
+    "index": "product_quantity_stock_quantity_index"
+  },
+  {
+    "dropIndexes": "transactions",
+    "index": "transaction_date_quantity_index"
+  },
+  {
+    "dropIndexes": "transactions",
+    "index": "region_total_price_quantity_index"
   }
 ]
