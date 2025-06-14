@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erainogo/revenue-dashboard/cmd/init"
+	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	logger := init.SetUpLogger()
+	logger := initializations.SetUpLogger()
 
 	// context for the application
 	ctx, cancel := context.WithCancel(context.Background())
@@ -32,7 +32,7 @@ func main() {
 		ReadTimeout:  time.Duration(*config.Config.ReadTimeOut) * time.Second,
 	}
 
-	mongoClient, err := init.CreateMongoClient(ctx, logger)
+	mongoClient, err := initializations.CreateMongoClient(ctx, logger)
 
 	if err != nil {
 		logger.Fatal("failed to connect to mongo: %v", err)
@@ -76,7 +76,7 @@ func main() {
 	if *config.Config.MongoDBMigrate {
 		logger.Info("Migrating ... ")
 
-		err = init.RunMigration(mongoClient)
+		err = initializations.RunMigration(mongoClient)
 
 		if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 			logger.Fatal(err)

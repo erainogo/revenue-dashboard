@@ -1,4 +1,4 @@
-package init
+package initializations
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 )
 
 func SetUpLogger() *zap.SugaredLogger {
-	appName := fmt.Sprintf("%s-html-analyzer", *config.Config.Prefix)
+	appName := fmt.Sprintf("%s-revenue-dashboard", *config.Config.Prefix)
 
 	zapLogger, _ := zap.NewProduction()
 

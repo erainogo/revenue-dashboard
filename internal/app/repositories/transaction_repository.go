@@ -3,8 +3,8 @@ package repositories
 import (
 	"context"
 	"errors"
-	"go.mongodb.org/mongo-driver/mongo"
 
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 
 	"github.com/erainogo/revenue-dashboard/internal/core/adapters"

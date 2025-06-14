@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"strconv"
@@ -13,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/erainogo/revenue-dashboard/cmd/init"
+	"go.uber.org/zap"
+
+	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
 	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
@@ -28,18 +29,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger := init.SetUpLogger()
+	logger := initializations.SetUpLogger()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
-	mongoClient, err := init.CreateMongoClient(ctx, logger)
+	mongoClient, err := initializations.CreateMongoClient(ctx, logger)
 
 	if err != nil {
 		logger.Fatal("failed to connect to mongo: %v", err)
 	}
+
+	defer func() {
+		err = mongoClient.Disconnect(ctx)
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
 
 	// background routine to shut down server if signal received
 	// this will wait for the ch chan to receive the exit signals from the os.
@@ -50,12 +58,10 @@ func main() {
 
 		cancel()
 
-		defer func() {
-			err = mongoClient.Disconnect(ctx)
-			if err != nil {
-				logger.Error(err)
-			}
-		}()
+		err = mongoClient.Disconnect(ctx)
+		if err != nil {
+			logger.Error(err)
+		}
 
 		logger.Info("Server gracefully stopped")
 	}()
@@ -112,6 +118,7 @@ func main() {
 	}
 
 	ln := 0
+	sln := 0
 
 	for {
 		record, err := r.Read()
@@ -125,6 +132,8 @@ func main() {
 		if err != nil {
 			logger.Warnf("Skipping line %d: %v", ln, err)
 
+			sln++
+
 			continue
 		}
 		// send record to the channel
@@ -133,11 +142,12 @@ func main() {
 
 	wg.Wait()
 
-	logger.Infof("total number of %v lines has been processed", ln)
+	logger.Infof("total number of %v lines has been processed ", ln)
+	logger.Infof("total number of  %v lines has been skipped ", sln)
 
 	logger.Info("Ingestion completed successfully.")
 
-	os.Exit(1)
+    return
 }
 
 func parseRecord(record []string) (entities.Transaction, error) {
