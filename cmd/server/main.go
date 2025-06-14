@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 	"log"
 	"net/http"
 	"os"
@@ -92,13 +91,9 @@ func main() {
 			Collection(*config.Config.MongoCountryProductSummaryCollection),
 		repositories.WithLoggerP(logger))
 
-	countryAggregator := aggregators.NewCountryRevenueAggregator(
-		ctx, productSummeryRepository, aggregators.WithLogger(logger))
-
 	service := services.NewInsightService(
 		ctx,
 		productSummeryRepository,
-		countryAggregator,
 		services.WithLogger(logger))
 
 	// register routes for insights

@@ -13,7 +13,6 @@ type InsightService struct {
 	ctx                      context.Context
 	logger                   *zap.SugaredLogger
 	productSummeryRepository adapters.ProductSummeryRepository
-	countryAggregator        adapters.CountryRevenueAggregator
 }
 
 type InsightServiceOptions func(*InsightService)
@@ -27,13 +26,11 @@ func WithLogger(logger *zap.SugaredLogger) InsightServiceOptions {
 func NewInsightService(
 	ctx context.Context,
 	productSummeryRepository adapters.ProductSummeryRepository,
-	countryAggregator adapters.CountryRevenueAggregator,
 	opts ...InsightServiceOptions,
 ) adapters.InsightService {
 	svc := &InsightService{
 		ctx:                      ctx,
 		productSummeryRepository: productSummeryRepository,
-		countryAggregator:        countryAggregator,
 	}
 
 	for _, opt := range opts {
