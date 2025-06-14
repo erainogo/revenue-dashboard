@@ -46,12 +46,12 @@ func NewInsightService(
 	return svc
 }
 
-// IngestData worker function for data ingestion to the table.
+// IngestTransactionData IngestData worker function for data ingestion to the table.
 // listen to the application context and exit early if there is a cancellation.
 // prevents memory leaks and ensures the goroutine exits cleanly.
 // creates a slice of data to insert to the db as a batch. fixed size 500 - batch size.
 // reuse the same slice to avoid reallocating memory to a new slice.
-func (i *InsightService) IngestData(ctx context.Context, tc <-chan entities.Transaction) {
+func (i *InsightService) IngestTransactionData(ctx context.Context, tc <-chan entities.Transaction) {
 	select {
 	case <-ctx.Done():
 		i.logger.Infow("context done", "error", ctx.Err())
@@ -105,7 +105,7 @@ func (i *InsightService) GetCountryLevelRevenue(
 	return aggregator, nil
 }
 
-func (i *InsightService) InsertBulkProductSummery(ctx context.Context) error {
+func (i *InsightService) IngestProductSummery(ctx context.Context) error {
 	err := i.productSummeryRepository.BulkInsert(ctx, i.countryAggregator.GetOutput())
 
 	if err != nil {

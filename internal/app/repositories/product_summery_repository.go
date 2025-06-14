@@ -114,8 +114,8 @@ func (p *ProductSummeryRepository) GetCountryLevelRevenueSortedByTotal(
 	opts.SetHint(countryProductTotalCompoundIndex)
 	opts.SetSort(bson.D{{Key: "total_revenue", Value: -1}})
 
-	//opts.SetSkip(int64(offset))
-	//opts.SetLimit(int64(limit))
+	opts.SetSkip(int64(offset))
+	opts.SetLimit(int64(limit))
 
 	cursor, err := p.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
 func (h *HttpServer) GetCountryLevelRevenueHandler(ctx context.Context) func(http.ResponseWriter, *http.Request) {
@@ -39,9 +41,15 @@ func (h *HttpServer) GetCountryLevelRevenueHandler(ctx context.Context) func(htt
 			return
 		}
 
+		response := entities.CountryLevelRevenueResponse{
+			Page:  page,
+			Limit: limit,
+			Data:  rg,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).Encode(rg); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			h.logger.Errorw("failed to encode result", "error", err)
 
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)

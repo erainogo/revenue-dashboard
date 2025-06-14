@@ -15,12 +15,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/erainogo/revenue-dashboard/cmd/initializations"
+	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
 	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
 	"github.com/erainogo/revenue-dashboard/pkg/constants"
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
-	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 )
 
 func main() {
@@ -124,7 +124,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			service.IngestData(ctx, tc)
+			service.IngestTransactionData(ctx, tc)
 		}()
 	}
 
@@ -159,7 +159,7 @@ func main() {
 
 	logger.Info("All ingestion workers done")
 
-	err = service.InsertBulkProductSummery(ctx)
+	err = service.IngestProductSummery(ctx)
 	if err != nil {
 		logger.Warnf("Failed to insert bulk product summery: %v", err)
 
