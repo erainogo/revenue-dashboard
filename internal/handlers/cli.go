@@ -110,6 +110,7 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 	s.logger.Info("All ingestion workers done")
 
 	// we can close the file after file has been imported.
+	// pre aggregated in memory cache (map) will be read to insert insight after that.
 	err = file.Close()
 	if err != nil {
 		s.logger.Error("failed to close file", zap.Error(err))
