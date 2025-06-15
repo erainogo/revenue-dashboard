@@ -88,6 +88,62 @@ func (h *HttpServer) GetFrequentlyPurchasedProductsHandler(ctx context.Context) 
 	}
 }
 
+func (h *HttpServer) GetMonthlySalesSummeryHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rg, err := h.service.GetMonthlyRevenue(ctx)
+
+		if err != nil {
+			h.logger.Errorw("failed to get monthly sales summery", "error", err)
+
+			http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
+
+			return
+		}
+
+		response := entities.MonthlySalesSummaryResponse{
+			Data: rg,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			h.logger.Errorw("failed to encode result", "error", err)
+
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+			return
+		}
+	}
+}
+
+func (h *HttpServer) GetRegionRevenueSummeryHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rg, err := h.service.GetRegionRevenue(ctx)
+
+		if err != nil {
+			h.logger.Errorw("failed to get region revenue summery", "error", err)
+
+			http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
+
+			return
+		}
+
+		response := entities.RegionRevenueSummaryResponse{
+			Data: rg,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			h.logger.Errorw("failed to encode result", "error", err)
+
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+			return
+		}
+	}
+}
+
 func (h *HttpServer) HealthHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -96,10 +96,22 @@ func main() {
 			Collection(*config.Config.MongoPurchaseSummeryCollection),
 		repositories.WithLoggerPS(logger))
 
+	monthlySalesSummeryRepository := repositories.NewMonthlySalesSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoMonthlySalesSummeryCollection),
+		repositories.WithLoggerM(logger))
+
+	regionRevenueSummeryRepository := repositories.NewRegionRevenueSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoRegionRevenueSummeryCollection),
+		repositories.WithLoggerR(logger))
+
 	service := services.NewInsightService(
 		ctx,
 		productSummeryRepository,
 		purchaseSummeryRepository,
+		monthlySalesSummeryRepository,
+		regionRevenueSummeryRepository,
 		services.WithLogger(logger))
 
 	// register routes for insights

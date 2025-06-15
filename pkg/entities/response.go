@@ -9,3 +9,11 @@ type CountryLevelRevenueResponse struct {
 type FrequentlyPurchasedProductsResponse struct {
 	Data  []*ProductPurchaseSummary `json:"data"`
 }
+
+type MonthlySalesSummaryResponse struct {
+	Data  []*MonthlySales `json:"data"`
+}
+
+type RegionRevenueSummaryResponse struct {
+	Data  []*RegionRevenue `json:"data"`
+}

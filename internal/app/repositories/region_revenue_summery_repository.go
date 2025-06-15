@@ -102,6 +102,39 @@ func (r RegionRevenueSummeryRepository) BulkInsert(ctx context.Context, summaryM
 }
 
 func (r RegionRevenueSummeryRepository) GetRegionRevenue(ctx context.Context) ([]*entities.RegionRevenue, error) {
-	//TODO implement me
-	panic("implement me")
+	opts := options.Find()
+	opts.SetSort(bson.M{
+		"total_revenue":  -1,
+	})
+	opts.SetLimit(30)
+
+	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		r.logger.Errorf("Failed to query region revenue: %v", err)
+		return nil, err
+	}
+
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			r.logger.Errorf("Failed to close cursor: %v", err)
+		}
+	}()
+
+	var results []*entities.RegionRevenue
+
+	for cursor.Next(ctx) {
+		var summary entities.RegionRevenue
+
+		if err := cursor.Decode(&summary); err != nil {
+			return nil, err
+		}
+
+		results = append(results, &summary)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

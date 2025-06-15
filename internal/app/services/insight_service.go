@@ -10,10 +10,12 @@ import (
 )
 
 type InsightService struct {
-	ctx                       context.Context
-	logger                    *zap.SugaredLogger
-	productSummeryRepository  adapters.ProductSummeryRepository
-	purchaseSummeryRepository adapters.PurchaseSummeryRepository
+	ctx                            context.Context
+	logger                         *zap.SugaredLogger
+	productSummeryRepository       adapters.ProductSummeryRepository
+	purchaseSummeryRepository      adapters.PurchaseSummeryRepository
+	monthlySalesSummeryRepository  adapters.MonthlySalesSummeryRepository
+	regionRevenueSummeryRepository adapters.RegionRevenueSummeryRepository
 }
 
 type InsightServiceOptions func(*InsightService)
@@ -28,12 +30,16 @@ func NewInsightService(
 	ctx context.Context,
 	productSummeryRepository adapters.ProductSummeryRepository,
 	purchaseSummeryRepository adapters.PurchaseSummeryRepository,
+	monthlySalesSummeryRepository adapters.MonthlySalesSummeryRepository,
+	regionRevenueSummeryRepository adapters.RegionRevenueSummeryRepository,
 	opts ...InsightServiceOptions,
 ) adapters.InsightService {
 	svc := &InsightService{
 		ctx:                       ctx,
 		productSummeryRepository:  productSummeryRepository,
 		purchaseSummeryRepository: purchaseSummeryRepository,
+		monthlySalesSummeryRepository: monthlySalesSummeryRepository,
+		regionRevenueSummeryRepository:regionRevenueSummeryRepository,
 	}
 
 	for _, opt := range opts {
@@ -60,6 +66,26 @@ func (i *InsightService) GetCountryLevelRevenue(
 func (i *InsightService) GetFrequentlyPurchasedProducts(ctx context.Context,
 ) ([]*entities.ProductPurchaseSummary, error) {
 	aggregator, err := i.purchaseSummeryRepository.GetFrequentlyPurchasedProducts(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregator, nil
+}
+
+func (i *InsightService) GetRegionRevenue(ctx context.Context) ([]*entities.RegionRevenue, error) {
+	aggregator, err := i.regionRevenueSummeryRepository.GetRegionRevenue(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregator, nil
+}
+
+func (i *InsightService) GetMonthlyRevenue(ctx context.Context) ([]*entities.MonthlySales, error) {
+	aggregator, err := i.monthlySalesSummeryRepository.GetMonthlyRevenue(ctx)
 
 	if err != nil {
 		return nil, err

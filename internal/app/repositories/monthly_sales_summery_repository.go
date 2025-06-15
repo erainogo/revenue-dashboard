@@ -99,6 +99,39 @@ func (m MonthlySalesSummeryRepository) BulkInsert(ctx context.Context, summaryMa
 }
 
 func (m MonthlySalesSummeryRepository) GetMonthlyRevenue(ctx context.Context) ([]*entities.MonthlySales, error) {
-	//TODO implement me
-	panic("implement me")
+	opts := options.Find()
+	opts.SetSort(bson.M{
+		"total_quantity": -1,
+	})
+	opts.SetLimit(30)
+
+	cursor, err := m.collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		m.logger.Errorf("Failed to query monthly sales: %v", err)
+		return nil, err
+	}
+
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			m.logger.Errorf("Failed to close cursor: %v", err)
+		}
+	}()
+
+	var results []*entities.MonthlySales
+
+	for cursor.Next(ctx) {
+		var summary entities.MonthlySales
+
+		if err := cursor.Decode(&summary); err != nil {
+			return nil, err
+		}
+
+		results = append(results, &summary)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
