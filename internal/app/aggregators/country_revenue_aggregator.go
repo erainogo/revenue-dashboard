@@ -13,7 +13,6 @@ import (
 type CountryRevenueAggregator struct {
 	ctx                      context.Context
 	logger                   *zap.SugaredLogger
-	productSummeryRepository adapters.ProductSummeryRepository
 	SummeryMap               map[entities.CountrySummaryKey]*entities.CountryLevelRevenue // in memory cache to calculate revenue by country summery
 	mutex                    sync.Mutex
 }
@@ -28,12 +27,10 @@ func WithLogger(logger *zap.SugaredLogger) CountryRevenueAggregatorOptions {
 
 func NewCountryRevenueAggregator(
 	ctx context.Context,
-	productSummeryRepository adapters.ProductSummeryRepository,
 	opts ...CountryRevenueAggregatorOptions,
 ) adapters.Aggregator {
 	svc := &CountryRevenueAggregator{
 		ctx:                      ctx,
-		productSummeryRepository: productSummeryRepository,
 		SummeryMap:               make(map[entities.CountrySummaryKey]*entities.CountryLevelRevenue),
 	}
 

@@ -25,7 +25,9 @@ type Configuration struct {
 	MongoTransactionCollectionName       *string
 	MongoDBMigrate                       *bool
 	MongoCountryProductSummaryCollection *string
-	MongoPurchaseSummeryCollection      *string
+	MongoPurchaseSummeryCollection       *string
+	MongoMonthlySalesSummeryCollection   *string
+	MongoRegionRevenueSummeryCollection  *string
 }
 
 var (
@@ -86,6 +88,16 @@ var (
 		"product_purchase_summary",
 		"purchase product summary Mongodb Collection")
 
+	mongoMonthlySalesSummeryCollection = flag.String(
+		"monthly-sales-summary-collection",
+		"monthly_sales_summary",
+		"monthly sales summary Mongodb Collection")
+
+	mongoRegionRevenueSummeryCollection = flag.String(
+		"region-revenue-summary-collection",
+		"region_revenue_summary",
+		"region revenue summary Mongodb Collection")
+
 	feUrl = flag.String(
 		"fe-url",
 		"http://localhost:5173", // change your front end url
@@ -142,5 +154,7 @@ func init() {
 		MongoDBEndpoint:                mongoDBEndpoint,
 		MongoDBDatabase:                mongoDBDatabase,
 		MongoPurchaseSummeryCollection: mongoPurchaseSummeryCollection,
+		MongoMonthlySalesSummeryCollection: mongoMonthlySalesSummeryCollection,
+		MongoRegionRevenueSummeryCollection: mongoRegionRevenueSummeryCollection,
 	}
 }

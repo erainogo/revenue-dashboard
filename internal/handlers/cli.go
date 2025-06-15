@@ -118,7 +118,7 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 
 	// when transaction ingesting to the db,
 	// in the background in memory cache is being used to pre-aggregate the results for insights
-	// after file data ingestion is done, those maps are being inserted here as upsert bulks.
+	// after file data ingestion is done, those maps are being inserted here as upsert bulks. (using upsert bulk bcz future imports might include the same product, etc...)
 	// doing this to reduce calculating data when fetching via API
 	// also easy to cache for the frond-end in the future
 	// if we want these data to be updated real time, ( if file ingestion happens more often we have to update the summaries )
@@ -133,6 +133,20 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 	err = s.service.IngestPurchaseSummery(ctx)
 	if err != nil {
 		s.logger.Warnf("Failed to insert bulk purchase summery: %v", err)
+
+		return err
+	}
+
+	err = s.service.IngestMonthlySalesSummery(ctx)
+	if err != nil {
+		s.logger.Warnf("Failed to insert bulk monthly sales summery: %v", err)
+
+		return err
+	}
+
+	err = s.service.IngestRegionRevenueSummery(ctx)
+	if err != nil {
+		s.logger.Warnf("Failed to insert bulk region revenue summery: %v", err)
 
 		return err
 	}

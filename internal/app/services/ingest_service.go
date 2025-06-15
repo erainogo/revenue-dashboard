@@ -12,13 +12,17 @@ import (
 )
 
 type IngestService struct {
-	ctx                      context.Context
-	logger                   *zap.SugaredLogger
-	transactionRepository    adapters.TransactionRepository
-	productSummeryRepository adapters.ProductSummeryRepository
-	purchaseRepository       adapters.PurchaseSummeryRepository
-	countryAggregator        adapters.Aggregator
-	purchaseAggregator       adapters.Aggregator
+	ctx                            context.Context
+	logger                         *zap.SugaredLogger
+	transactionRepository          adapters.TransactionRepository
+	productSummeryRepository       adapters.ProductSummeryRepository
+	purchaseRepository             adapters.PurchaseSummeryRepository
+	countryAggregator              adapters.Aggregator
+	purchaseAggregator             adapters.Aggregator
+	monthlySalesAggregator         adapters.Aggregator
+	regionRevenueAggregator        adapters.Aggregator
+	monthlySalesSummeryRepository  adapters.MonthlySalesSummeryRepository
+	regionRevenueSummeryRepository adapters.RegionRevenueSummeryRepository
 }
 
 type IngestServiceOptions func(*IngestService)
@@ -34,17 +38,25 @@ func NewIngestService(
 	transactionRepository adapters.TransactionRepository,
 	productSummeryRepository adapters.ProductSummeryRepository,
 	purchaseRepository adapters.PurchaseSummeryRepository,
+	monthlySalesSummeryRepository adapters.MonthlySalesSummeryRepository,
+	regionRevenueSummeryRepository adapters.RegionRevenueSummeryRepository,
 	countryAggregator adapters.Aggregator,
 	purchaseAggregator adapters.Aggregator,
+	monthlySalesAggregator adapters.Aggregator,
+	regionRevenueAggregator adapters.Aggregator,
 	opts ...IngestServiceOptions,
 ) adapters.IngestService {
 	svc := &IngestService{
-		ctx:                      ctx,
-		transactionRepository:    transactionRepository,
-		productSummeryRepository: productSummeryRepository,
-		purchaseRepository:       purchaseRepository,
-		countryAggregator:        countryAggregator,
-		purchaseAggregator:       purchaseAggregator,
+		ctx:                           ctx,
+		transactionRepository:         transactionRepository,
+		productSummeryRepository:      productSummeryRepository,
+		purchaseRepository:            purchaseRepository,
+		monthlySalesSummeryRepository: monthlySalesSummeryRepository,
+		regionRevenueSummeryRepository:regionRevenueSummeryRepository,
+		countryAggregator:             countryAggregator,
+		purchaseAggregator:            purchaseAggregator,
+		monthlySalesAggregator:        monthlySalesAggregator,
+		regionRevenueAggregator:       regionRevenueAggregator,
 	}
 
 	for _, opt := range opts {
@@ -73,8 +85,7 @@ func (i *IngestService) IngestTransactionData(ctx context.Context, tc <-chan ent
 		for tx := range tc {
 			batch = append(batch, tx)
 
-			i.countryAggregator.Aggregate(tx)
-			i.purchaseAggregator.Aggregate(tx)
+			i.RunAggregators(tx)
 
 			if len(batch) >= constants.BatchSize {
 				err := i.transactionRepository.BulkInsert(ctx, batch)
@@ -99,6 +110,13 @@ func (i *IngestService) IngestTransactionData(ctx context.Context, tc <-chan ent
 			}
 		}
 	}
+}
+
+func (i *IngestService) RunAggregators(tx entities.Transaction) {
+	i.countryAggregator.Aggregate(tx)
+	i.purchaseAggregator.Aggregate(tx)
+	i.monthlySalesAggregator.Aggregate(tx)
+	i.regionRevenueAggregator.Aggregate(tx)
 }
 
 func (i *IngestService) IngestCountrySummery(ctx context.Context) error {
@@ -127,6 +145,40 @@ func (i *IngestService) IngestPurchaseSummery(ctx context.Context) error {
 	}
 
 	err := i.purchaseRepository.BulkInsert(ctx, output)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *IngestService) IngestMonthlySalesSummery(ctx context.Context) error {
+	rwo := i.monthlySalesAggregator.GetOutput()
+
+	output, ok := rwo.(map[string]*entities.MonthlySales)
+	if !ok {
+		return fmt.Errorf("unexpected type for output: %T", rwo)
+	}
+
+	err := i.monthlySalesSummeryRepository.BulkInsert(ctx, output)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *IngestService) IngestRegionRevenueSummery(ctx context.Context) error {
+	rwo := i.regionRevenueAggregator.GetOutput()
+
+	output, ok := rwo.(map[string]*entities.RegionRevenue)
+	if !ok {
+		return fmt.Errorf("unexpected type for output: %T", rwo)
+	}
+
+	err := i.regionRevenueSummeryRepository.BulkInsert(ctx, output)
 
 	if err != nil {
 		return err

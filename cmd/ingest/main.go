@@ -75,19 +75,39 @@ func main() {
 			Collection(*config.Config.MongoPurchaseSummeryCollection),
 		repositories.WithLoggerPS(logger))
 
+	monthlySalesSummeryRepository := repositories.NewMonthlySalesSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoMonthlySalesSummeryCollection),
+		repositories.WithLoggerM(logger))
+
+	regionRevenueSummeryRepository := repositories.NewRegionRevenueSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoRegionRevenueSummeryCollection),
+		repositories.WithLoggerR(logger))
+
 	countryAggregator := aggregators.NewCountryRevenueAggregator(
-		ctx, productSummeryRepository, aggregators.WithLogger(logger))
+		ctx, aggregators.WithLogger(logger))
 
 	purchaseAggregator := aggregators.NewProductPurchaseAggregator(
-		ctx, productSummeryRepository, aggregators.WithLoggerP(logger))
+		ctx, aggregators.WithLoggerP(logger))
+
+	monthlySalesAggregator := aggregators.NewMonthlySalesAggregator(
+		ctx, aggregators.WithLoggerM(logger))
+
+	regionRevenueAggregator := aggregators.NewRegionRevenueAggregator(
+		ctx, aggregators.WithLoggerR(logger))
 
 	service := services.NewIngestService(
 		ctx,
 		transactionRepository,
 		productSummeryRepository,
 		purchaseSummeryRepository,
+		monthlySalesSummeryRepository,
+		regionRevenueSummeryRepository,
 		countryAggregator,
 		purchaseAggregator,
+		monthlySalesAggregator,
+		regionRevenueAggregator,
 		services.WithLoggerI(logger))
 
 	handler := handlers.NewCli(ctx, service, handlers.WithLoggerC(logger))

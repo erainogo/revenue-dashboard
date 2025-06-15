@@ -13,7 +13,6 @@ import (
 type ProductPurchaseAggregator struct {
 	ctx                      context.Context
 	logger                   *zap.SugaredLogger
-	productSummeryRepository adapters.ProductSummeryRepository
 	SummeryMap               map[string]*entities.ProductPurchaseSummary // in memory cache to calculate purchase summery
 	mutex                    sync.Mutex
 }
@@ -28,12 +27,10 @@ func WithLoggerP(logger *zap.SugaredLogger) ProductPurchaseAggregatorOptions {
 
 func NewProductPurchaseAggregator(
 	ctx context.Context,
-	productSummeryRepository adapters.ProductSummeryRepository,
 	opts ...ProductPurchaseAggregatorOptions,
 ) adapters.Aggregator {
 	svc := &ProductPurchaseAggregator{
 		ctx:                      ctx,
-		productSummeryRepository: productSummeryRepository,
 		SummeryMap:               make(map[string]*entities.ProductPurchaseSummary),
 	}
 
