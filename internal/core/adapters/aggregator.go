@@ -4,7 +4,7 @@ import (
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
-type CountryRevenueAggregator interface {
+type Aggregator interface {
     Aggregate(tx entities.Transaction)
 	GetOutput() map[entities.SummaryKey]*entities.CountryLevelRevenue
 }

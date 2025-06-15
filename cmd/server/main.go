@@ -91,9 +91,15 @@ func main() {
 			Collection(*config.Config.MongoCountryProductSummaryCollection),
 		repositories.WithLoggerP(logger))
 
+	purchaseSummeryRepository := repositories.NewPurchaseSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoPurchaseSummeryCollection),
+		repositories.WithLoggerPS(logger))
+
 	service := services.NewInsightService(
 		ctx,
 		productSummeryRepository,
+		purchaseSummeryRepository,
 		services.WithLogger(logger))
 
 	// register routes for insights
