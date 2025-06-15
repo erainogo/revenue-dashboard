@@ -24,6 +24,3 @@ docker-web-build: web-build
 
 docker-web-push:
 	docker push $(WEB_IMAGE_NAME)
-
-docker-cli-push:
-	docker push $(CLI_IMAGE_NAME)
