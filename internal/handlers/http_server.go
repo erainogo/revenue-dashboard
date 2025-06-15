@@ -29,7 +29,7 @@ func NewHttpServer(
 	ctx context.Context,
 	service adapters.InsightService,
 	opts ...HttpServerOptions,
-) *HttpServer {
+) http.Handler {
 	server := &HttpServer{
 		ctx:     ctx,
 		service: service,
@@ -42,7 +42,7 @@ func NewHttpServer(
 
 	server.registerRoutes(ctx)
 
-	return server
+	return applyCorsMiddleware(server)
 }
 
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
