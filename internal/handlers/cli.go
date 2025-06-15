@@ -116,9 +116,23 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 
 	s.logger.Info("All ingestion workers done")
 
-	err = s.service.IngestProductSummery(ctx)
+	// when transaction ingesting to the db,
+	// in the background in memory cache is being calculated to pre-calculate the results for insights
+	// after file data ingestion is done, those maps are being inserted here as upsert bulks.
+	// doing this to reduce calculating data when fetching via API
+	// also easy to cache for the frond-end in the future
+	// if we want these data to be updated real time, ( if file ingestion happens more often we have to update the summaries )
+	// we can deploy background thread to update the db.
+	err = s.service.IngestCountrySummery(ctx)
 	if err != nil {
 		s.logger.Warnf("Failed to insert bulk product summery: %v", err)
+
+		return err
+	}
+
+	err = s.service.IngestPurchaseSummery(ctx)
+	if err != nil {
+		s.logger.Warnf("Failed to insert bulk purchase summery: %v", err)
 
 		return err
 	}

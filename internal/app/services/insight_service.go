@@ -10,9 +10,10 @@ import (
 )
 
 type InsightService struct {
-	ctx                      context.Context
-	logger                   *zap.SugaredLogger
-	productSummeryRepository adapters.ProductSummeryRepository
+	ctx                       context.Context
+	logger                    *zap.SugaredLogger
+	productSummeryRepository  adapters.ProductSummeryRepository
+	purchaseSummeryRepository adapters.PurchaseSummeryRepository
 }
 
 type InsightServiceOptions func(*InsightService)
@@ -26,11 +27,13 @@ func WithLogger(logger *zap.SugaredLogger) InsightServiceOptions {
 func NewInsightService(
 	ctx context.Context,
 	productSummeryRepository adapters.ProductSummeryRepository,
+	purchaseSummeryRepository adapters.PurchaseSummeryRepository,
 	opts ...InsightServiceOptions,
 ) adapters.InsightService {
 	svc := &InsightService{
-		ctx:                      ctx,
-		productSummeryRepository: productSummeryRepository,
+		ctx:                       ctx,
+		productSummeryRepository:  productSummeryRepository,
+		purchaseSummeryRepository: purchaseSummeryRepository,
 	}
 
 	for _, opt := range opts {
@@ -46,6 +49,17 @@ func (i *InsightService) GetCountryLevelRevenue(
 	limit int) ([]*entities.CountryLevelRevenue, error) {
 	aggregator, err := i.productSummeryRepository.GetCountryLevelRevenueSortedByTotal(
 		ctx, page, limit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregator, nil
+}
+
+func (i *InsightService) GetFrequentlyPurchasedProducts(ctx context.Context,
+) ([]*entities.ProductPurchaseSummary, error) {
+	aggregator, err := i.purchaseSummeryRepository.GetFrequentlyPurchasedProducts(ctx)
 
 	if err != nil {
 		return nil, err

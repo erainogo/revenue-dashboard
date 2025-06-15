@@ -8,5 +8,6 @@ import (
 
 type IngestService interface {
 	IngestTransactionData(ctx context.Context, tc <-chan entities.Transaction)
-	IngestProductSummery(ctx context.Context) error
+	IngestCountrySummery(ctx context.Context) error
+	IngestPurchaseSummery(ctx context.Context) error
 }

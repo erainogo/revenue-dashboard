@@ -6,7 +6,9 @@ import (
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
-type InsightService interface {
-	GetCountryLevelRevenue(ctx context.Context, page int, limit int) ([]*entities.CountryLevelRevenue, error)
+
+type PurchaseSummeryRepository interface {
+	BulkInsert(ctx context.Context, docs map[string]*entities.ProductPurchaseSummary) error
 	GetFrequentlyPurchasedProducts(ctx context.Context) ([]*entities.ProductPurchaseSummary, error)
 }
+

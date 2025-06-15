@@ -15,30 +15,30 @@ import (
 )
 
 const (
-	// Mongodb indexes.
-	countryProductTotalCompoundIndex = "country_product_revenue_index"
+// Mongodb indexes.
+// countryProductTotalCompoundIndex = "country_product_revenue_index"
 )
 
-type ProductSummeryRepository struct {
+type PurchaseSummeryRepository struct {
 	ctx        context.Context
 	logger     *zap.SugaredLogger
 	collection *mongo.Collection
 }
 
-type ProductSummeryRepositoryOptions func(*ProductSummeryRepository)
+type PurchaseSummeryRepositoryOptions func(*PurchaseSummeryRepository)
 
-func WithLoggerP(logger *zap.SugaredLogger) ProductSummeryRepositoryOptions {
-	return func(s *ProductSummeryRepository) {
+func WithLoggerPS(logger *zap.SugaredLogger) PurchaseSummeryRepositoryOptions {
+	return func(s *PurchaseSummeryRepository) {
 		s.logger = logger
 	}
 }
 
-func NewProductSummeryRepository(
+func NewPurchaseSummeryRepository(
 	ctx context.Context,
 	col *mongo.Collection,
-	opts ...ProductSummeryRepositoryOptions,
-) adapters.ProductSummeryRepository {
-	svc := &ProductSummeryRepository{
+	opts ...PurchaseSummeryRepositoryOptions,
+) adapters.PurchaseSummeryRepository {
+	svc := &PurchaseSummeryRepository{
 		ctx:        ctx,
 		collection: col,
 	}
@@ -50,9 +50,9 @@ func NewProductSummeryRepository(
 	return svc
 }
 
-func (p *ProductSummeryRepository) BulkInsert(
+func (p *PurchaseSummeryRepository) BulkInsert(
 	ctx context.Context,
-	summaryMap map[entities.CountrySummaryKey]*entities.CountryLevelRevenue,
+	summaryMap map[string]*entities.ProductPurchaseSummary,
 ) error {
 	if len(summaryMap) == 0 {
 		p.logger.Warn("Empty documents")
@@ -62,19 +62,15 @@ func (p *ProductSummeryRepository) BulkInsert(
 
 	var updates []mongo.WriteModel
 
-	for key, summary := range summaryMap {
-		filter := bson.M{
-			"country":      key.Country,
-			"product_name": key.ProductName,
-		}
+	for _, summary := range summaryMap {
+		filter := bson.M{"product_id": summary.ProductID}
 
 		update := bson.M{
-			"$inc": bson.M{
-				"total_revenue":     summary.TotalRevenue,
-				"transaction_count": summary.TransactionCount,
-			},
+			"$inc": bson.M{"purchase_count": summary.PurchaseCount},
 			"$set": bson.M{
-				"updated_at": summary.UpdatedAt,
+				"product_name":   summary.ProductName,
+				"stock_quantity": summary.StockQuantity,
+				"updated_at":     summary.UpdatedAt,
 			},
 		}
 
@@ -91,11 +87,13 @@ func (p *ProductSummeryRepository) BulkInsert(
 	res, err := p.collection.BulkWrite(ctx, updates, bulkOpts)
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
+
 		if errors.As(err, &bulkErr) {
 			for _, writeErr := range bulkErr.WriteErrors {
 				p.logger.Errorf("Write error: %v", writeErr)
 			}
 		}
+
 		return err
 	}
 
@@ -105,21 +103,15 @@ func (p *ProductSummeryRepository) BulkInsert(
 	return nil
 }
 
-func (p *ProductSummeryRepository) GetCountryLevelRevenueSortedByTotal(
-	ctx context.Context,
-	offset int,
-	limit int,
-) ([]*entities.CountryLevelRevenue, error) {
+func (p *PurchaseSummeryRepository) GetFrequentlyPurchasedProducts(ctx context.Context,
+) ([]*entities.ProductPurchaseSummary, error) {
 	opts := options.Find()
-	opts.SetHint(countryProductTotalCompoundIndex)
-	opts.SetSort(bson.D{{Key: "total_revenue", Value: -1}})
-
-	opts.SetSkip(int64(offset))
-	opts.SetLimit(int64(limit))
+	opts.SetSort(bson.M{"purchase_count": -1})
+	opts.SetLimit(20)
 
 	cursor, err := p.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
-		p.logger.Errorf("Failed to query country summary: %v", err)
+		p.logger.Errorf("Failed to query frequently purchased products: %v", err)
 		return nil, err
 	}
 
@@ -129,10 +121,10 @@ func (p *ProductSummeryRepository) GetCountryLevelRevenueSortedByTotal(
 		}
 	}()
 
-	var results []*entities.CountryLevelRevenue
+	var results []*entities.ProductPurchaseSummary
 
 	for cursor.Next(ctx) {
-		var summary entities.CountryLevelRevenue
+		var summary entities.ProductPurchaseSummary
 
 		if err := cursor.Decode(&summary); err != nil {
 			return nil, err

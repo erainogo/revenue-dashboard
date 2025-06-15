@@ -25,6 +25,7 @@ type Configuration struct {
 	MongoTransactionCollectionName       *string
 	MongoDBMigrate                       *bool
 	MongoCountryProductSummaryCollection *string
+	MongoPurchaseSummeryCollection      *string
 }
 
 var (
@@ -79,6 +80,11 @@ var (
 		"country-product-summary-collection",
 		"country_product_summary",
 		"country product summary Mongodb Collection")
+
+	mongoPurchaseSummeryCollection = flag.String(
+		"country-purchase-summary-collection",
+		"product_purchase_summary",
+		"purchase product summary Mongodb Collection")
 
 	feUrl = flag.String(
 		"fe-url",
@@ -135,5 +141,6 @@ func init() {
 		MongoDBMigrate:                 mongoDBMigrate,
 		MongoDBEndpoint:                mongoDBEndpoint,
 		MongoDBDatabase:                mongoDBDatabase,
+		MongoPurchaseSummeryCollection: mongoPurchaseSummeryCollection,
 	}
 }

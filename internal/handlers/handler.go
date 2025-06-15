@@ -60,6 +60,34 @@ func (h *HttpServer) GetCountryLevelRevenueHandler(ctx context.Context) func(htt
 	}
 }
 
+func (h *HttpServer) GetFrequentlyPurchasedProductsHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rg, err := h.service.GetFrequentlyPurchasedProducts(ctx)
+
+		if err != nil {
+			h.logger.Errorw("failed to get top frequently purchased products", "error", err)
+
+			http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
+
+			return
+		}
+
+		response := entities.FrequentlyPurchasedProductsResponse{
+			Data: rg,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			h.logger.Errorw("failed to encode result", "error", err)
+
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+			return
+		}
+	}
+}
+
 func (h *HttpServer) HealthHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

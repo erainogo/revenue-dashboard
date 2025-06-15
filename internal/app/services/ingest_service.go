@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -15,7 +16,9 @@ type IngestService struct {
 	logger                   *zap.SugaredLogger
 	transactionRepository    adapters.TransactionRepository
 	productSummeryRepository adapters.ProductSummeryRepository
-	countryAggregator        adapters.CountryRevenueAggregator
+	purchaseRepository       adapters.PurchaseSummeryRepository
+	countryAggregator        adapters.Aggregator
+	purchaseAggregator       adapters.Aggregator
 }
 
 type IngestServiceOptions func(*IngestService)
@@ -30,14 +33,18 @@ func NewIngestService(
 	ctx context.Context,
 	transactionRepository adapters.TransactionRepository,
 	productSummeryRepository adapters.ProductSummeryRepository,
-	countryAggregator adapters.CountryRevenueAggregator,
+	purchaseRepository adapters.PurchaseSummeryRepository,
+	countryAggregator adapters.Aggregator,
+	purchaseAggregator adapters.Aggregator,
 	opts ...IngestServiceOptions,
 ) adapters.IngestService {
 	svc := &IngestService{
 		ctx:                      ctx,
 		transactionRepository:    transactionRepository,
 		productSummeryRepository: productSummeryRepository,
+		purchaseRepository:       purchaseRepository,
 		countryAggregator:        countryAggregator,
+		purchaseAggregator:       purchaseAggregator,
 	}
 
 	for _, opt := range opts {
@@ -53,7 +60,7 @@ func NewIngestService(
 // creates a slice of data to insert to the db as a batch. fixed size 500 - batch size.
 // reuse the same slice to avoid reallocating memory to a new slice.
 // also update the summery map to later ingest precalculated country product summery data.
-func (i IngestService) IngestTransactionData(ctx context.Context, tc <-chan entities.Transaction) {
+func (i *IngestService) IngestTransactionData(ctx context.Context, tc <-chan entities.Transaction) {
 	select {
 	case <-ctx.Done():
 		i.logger.Infow("context done", "error", ctx.Err())
@@ -67,6 +74,7 @@ func (i IngestService) IngestTransactionData(ctx context.Context, tc <-chan enti
 			batch = append(batch, tx)
 
 			i.countryAggregator.Aggregate(tx)
+			i.purchaseAggregator.Aggregate(tx)
 
 			if len(batch) >= constants.BatchSize {
 				err := i.transactionRepository.BulkInsert(ctx, batch)
@@ -93,8 +101,32 @@ func (i IngestService) IngestTransactionData(ctx context.Context, tc <-chan enti
 	}
 }
 
-func (i IngestService) IngestProductSummery(ctx context.Context) error {
-	err := i.productSummeryRepository.BulkInsert(ctx, i.countryAggregator.GetOutput())
+func (i *IngestService) IngestCountrySummery(ctx context.Context) error {
+	rwo := i.countryAggregator.GetOutput()
+
+	output, ok := rwo.(map[entities.CountrySummaryKey]*entities.CountryLevelRevenue)
+	if !ok {
+		return fmt.Errorf("unexpected type for output: %T", rwo)
+	}
+
+	err := i.productSummeryRepository.BulkInsert(ctx, output)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *IngestService) IngestPurchaseSummery(ctx context.Context) error {
+	rwo := i.purchaseAggregator.GetOutput()
+
+	output, ok := rwo.(map[string]*entities.ProductPurchaseSummary)
+	if !ok {
+		return fmt.Errorf("unexpected type for output: %T", rwo)
+	}
+
+	err := i.purchaseRepository.BulkInsert(ctx, output)
 
 	if err != nil {
 		return err

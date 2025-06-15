@@ -14,7 +14,7 @@ type CountryRevenueAggregator struct {
 	ctx                      context.Context
 	logger                   *zap.SugaredLogger
 	productSummeryRepository adapters.ProductSummeryRepository
-	SummeryMap               map[entities.SummaryKey]*entities.CountryLevelRevenue 	// in memory cache to calculate revenue by country summery
+	SummeryMap               map[entities.CountrySummaryKey]*entities.CountryLevelRevenue // in memory cache to calculate revenue by country summery
 	mutex                    sync.Mutex
 }
 
@@ -30,11 +30,11 @@ func NewCountryRevenueAggregator(
 	ctx context.Context,
 	productSummeryRepository adapters.ProductSummeryRepository,
 	opts ...CountryRevenueAggregatorOptions,
-) adapters.CountryRevenueAggregator {
+) adapters.Aggregator {
 	svc := &CountryRevenueAggregator{
 		ctx:                      ctx,
 		productSummeryRepository: productSummeryRepository,
-		SummeryMap:               make(map[entities.SummaryKey]*entities.CountryLevelRevenue),
+		SummeryMap:               make(map[entities.CountrySummaryKey]*entities.CountryLevelRevenue),
 	}
 
 	for _, opt := range opts {
@@ -48,7 +48,7 @@ func (s *CountryRevenueAggregator) Aggregate(tx entities.Transaction) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	key := entities.SummaryKey{Country: tx.Country, ProductName: tx.Product.Name}
+	key := entities.CountrySummaryKey{Country: tx.Country, ProductName: tx.Product.Name}
 
 	if _, exists := s.SummeryMap[key]; !exists {
 		s.SummeryMap[key] = &entities.CountryLevelRevenue{
@@ -65,11 +65,9 @@ func (s *CountryRevenueAggregator) Aggregate(tx entities.Transaction) {
 	summary.TransactionCount++
 }
 
-func (s *CountryRevenueAggregator) GetOutput(
-	) map[entities.SummaryKey]*entities.CountryLevelRevenue {
+func (s *CountryRevenueAggregator) GetOutput() any {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	return s.SummeryMap
 }
-

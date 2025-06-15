@@ -70,14 +70,24 @@ func main() {
 			Collection(*config.Config.MongoCountryProductSummaryCollection),
 		repositories.WithLoggerP(logger))
 
+	purchaseSummeryRepository := repositories.NewPurchaseSummeryRepository(ctx,
+		mongoClient.Database(*config.Config.MongoDBDatabase).
+			Collection(*config.Config.MongoPurchaseSummeryCollection),
+		repositories.WithLoggerPS(logger))
+
 	countryAggregator := aggregators.NewCountryRevenueAggregator(
 		ctx, productSummeryRepository, aggregators.WithLogger(logger))
+
+	purchaseAggregator := aggregators.NewProductPurchaseAggregator(
+		ctx, productSummeryRepository, aggregators.WithLoggerP(logger))
 
 	service := services.NewIngestService(
 		ctx,
 		transactionRepository,
 		productSummeryRepository,
+		purchaseSummeryRepository,
 		countryAggregator,
+		purchaseAggregator,
 		services.WithLoggerI(logger))
 
 	handler := handlers.NewCli(ctx, service, handlers.WithLoggerC(logger))

@@ -21,8 +21,3 @@ type Transaction struct {
 	TotalPrice      float64     `bson:"total_price" json:"total_price"`
 	AddedDate       time.Time    `bson:"added_date" json:"added_date"`
 }
-
-type SummaryKey struct {
-	Country     string
-	ProductName string
-}
