@@ -55,13 +55,6 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 		os.Exit(1)
 	}
 
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			s.logger.Error("failed to close file", zap.Error(err))
-		}
-	}(file)
-
 	// to reduce read() system calls use bufio
 	// It reads large chunks of data into memory and then serves that buffer to the consumer
 	r := csv.NewReader(bufio.NewReader(file))
@@ -116,8 +109,14 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 
 	s.logger.Info("All ingestion workers done")
 
+	// we can close the file after file has been imported.
+	err = file.Close()
+	if err != nil {
+		s.logger.Error("failed to close file", zap.Error(err))
+	}
+
 	// when transaction ingesting to the db,
-	// in the background in memory cache is being calculated to pre-calculate the results for insights
+	// in the background in memory cache is being used to pre-aggregate the results for insights
 	// after file data ingestion is done, those maps are being inserted here as upsert bulks.
 	// doing this to reduce calculating data when fetching via API
 	// also easy to cache for the frond-end in the future
