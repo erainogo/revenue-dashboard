@@ -1,0 +1,18 @@
+quiet: False
+disable-version-string: False
+with-expecter: True
+dir: "./{{.PackageName}}"
+mockname: "Mock{{.InterfaceName}}"
+filename: "mock_{{.InterfaceName}}.go"
+packages:
+  github.com/erainogo/revenue-dashboard/internal/core/adapters:
+    config:
+    interfaces:
+      Aggregator:
+      IngestService:
+      InsightService:
+      MonthlySalesSummeryRepository:
+      ProductSummeryRepository:
+      PurchaseSummeryRepository:
+      RegionRevenueSummeryRepository:
+      TransactionRepository:

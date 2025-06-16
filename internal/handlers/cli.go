@@ -130,12 +130,16 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 		return err
 	}
 
+	s.logger.Info("Successfully inserted bulk country product summery")
+
 	err = s.service.IngestPurchaseSummery(ctx)
 	if err != nil {
 		s.logger.Warnf("Failed to insert bulk purchase summery: %v", err)
 
 		return err
 	}
+
+	s.logger.Info("Successfully inserted bulk purchase summery")
 
 	err = s.service.IngestMonthlySalesSummery(ctx)
 	if err != nil {
@@ -144,12 +148,16 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 		return err
 	}
 
+	s.logger.Info("Successfully inserted bulk monthly sales summery")
+
 	err = s.service.IngestRegionRevenueSummery(ctx)
 	if err != nil {
 		s.logger.Warnf("Failed to insert bulk region revenue summery: %v", err)
 
 		return err
 	}
+
+	s.logger.Info("Successfully inserted bulk region revenue summery")
 
 	s.logger.Infof("total number of %v lines has been processed ", ln)
 	s.logger.Infof("total number of  %v lines has been skipped ", sln)

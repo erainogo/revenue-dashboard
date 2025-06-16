@@ -10,7 +10,7 @@ import (
 	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/aggregators"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
-	"github.com/erainogo/revenue-dashboard/internal/app/services"
+	"github.com/erainogo/revenue-dashboard/internal/app/services/ingest"
 	"github.com/erainogo/revenue-dashboard/internal/config"
 	"github.com/erainogo/revenue-dashboard/internal/handlers"
 	"github.com/erainogo/revenue-dashboard/pkg/constants"
@@ -97,7 +97,7 @@ func main() {
 	regionRevenueAggregator := aggregators.NewRegionRevenueAggregator(
 		ctx, aggregators.WithLoggerR(logger))
 
-	service := services.NewIngestService(
+	service := ingest.NewIngestService(
 		ctx,
 		transactionRepository,
 		productSummeryRepository,
@@ -108,7 +108,7 @@ func main() {
 		purchaseAggregator,
 		monthlySalesAggregator,
 		regionRevenueAggregator,
-		services.WithLoggerI(logger))
+		ingest.WithLoggerI(logger))
 
 	handler := handlers.NewCli(ctx, service, handlers.WithLoggerC(logger))
 

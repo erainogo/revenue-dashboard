@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/erainogo/revenue-dashboard/internal/app/services/insight"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
-	"github.com/erainogo/revenue-dashboard/internal/app/services"
 	"github.com/erainogo/revenue-dashboard/internal/config"
 	"github.com/erainogo/revenue-dashboard/internal/handlers"
 )
@@ -106,13 +106,13 @@ func main() {
 			Collection(*config.Config.MongoRegionRevenueSummeryCollection),
 		repositories.WithLoggerR(logger))
 
-	service := services.NewInsightService(
+	service := insight.NewInsightService(
 		ctx,
 		productSummeryRepository,
 		purchaseSummeryRepository,
 		monthlySalesSummeryRepository,
 		regionRevenueSummeryRepository,
-		services.WithLogger(logger))
+		insight.WithLogger(logger))
 
 	// register routes for insights
 	srv.Handler = handlers.NewHttpServer(
