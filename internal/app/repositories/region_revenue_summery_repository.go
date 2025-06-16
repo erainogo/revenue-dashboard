@@ -103,9 +103,7 @@ func (r RegionRevenueSummeryRepository) BulkInsert(ctx context.Context, summaryM
 
 func (r RegionRevenueSummeryRepository) GetRegionRevenue(ctx context.Context) ([]*entities.RegionRevenue, error) {
 	opts := options.Find()
-	opts.SetSort(bson.M{
-		"total_revenue":  -1,
-	})
+	opts.SetSort(bson.M{"total_revenue":  -1})
 	opts.SetLimit(30)
 
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)

@@ -14,11 +14,6 @@ import (
 	"github.com/erainogo/revenue-dashboard/pkg/entities"
 )
 
-const (
-	// Mongodb indexes.
-	//countryProductTotalCompoundIndex = "country_product_revenue_index"
-)
-
 type MonthlySalesSummeryRepository struct {
 	ctx        context.Context
 	logger     *zap.SugaredLogger

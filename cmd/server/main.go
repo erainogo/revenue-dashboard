@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erainogo/revenue-dashboard/internal/app/services/insight"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/erainogo/revenue-dashboard/cmd/initializations"
 	"github.com/erainogo/revenue-dashboard/internal/app/repositories"
+	"github.com/erainogo/revenue-dashboard/internal/app/services/insight"
 	"github.com/erainogo/revenue-dashboard/internal/config"
 	"github.com/erainogo/revenue-dashboard/internal/handlers"
 )
