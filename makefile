@@ -1,5 +1,4 @@
 BIN?=revenue-dashboard
-REGISTRY?=eranga567
 TAG?=latest
 WEB_IMAGE_NAME=$(REGISTRY)/$(BIN):$(TAG)-web
 
@@ -21,6 +20,3 @@ clean:
 
 docker-web-build: web-build
 	docker build -f web.Dockerfile -t $(WEB_IMAGE_NAME) .
-
-docker-web-push:
-	docker push $(WEB_IMAGE_NAME)
