@@ -1,67 +1,85 @@
-# Revenue-dashboard
+# 📊 Revenue Dashboard
 
-high-performance dashboard to analyze and visualize key business metrics from a provided dataset.
+> High-performance dashboard to analyze and visualize key business metrics from a provided dataset.
 
-# System-design
+## 🏗️ System Design
 
 <img width="1358" alt="Screenshot 2025-06-16 at 07 10 34" src="https://github.com/user-attachments/assets/132e27d3-3857-4922-83de-e07e685c931a" />
 
-## Architecture
+## 🏛️ Architecture
 
-### Components
-- **HTTP Server**: Handles API requests and serves dashboard endpoints
-- **Insight Service**: Fetches revenue analytics queries
-- **Ingestion Service/ Aggregators/ Repositoris**: Batch processes CSV data and aggregates metrics
-- **MongoDB**: Document database with optimized collections for analytics
+### 🔧 Components
+- **🖥️ HTTP Server**: Handles API requests and serves dashboard endpoints
+- **🔍 Insight Service**: Fetches revenue analytics queries
+- **📥 Ingestion Service/Aggregators/Repositories**: Batch processes CSV data and aggregates metrics
+- **🗄️ MongoDB**: Document database with optimized collections for analytics
 
-### API Endpoints
-Start API server
+## 📚 Database Collections
 
-Navigate to cmd/server
+| Collection | Description |
+|------------|-------------|
+| `transactions` | Raw transaction data |
+| `region_revenue_summary` | Aggregated regional metrics |
+| `country_product_summary` | Country-wise product performance |
+| `monthly_sales_summary` | Monthly sales aggregations |
 
-go run main.go
+## ⚙️ Setup
 
-- You can also build the binary and run this
-
-Navigate to cmd/server
-
-- `GET /getfrequentlypurchasedproducts` - Most popular products
-- `GET /getcountrylevelrevenue` - Country-wise product performance
-- `GET /getmonthlysalessummary` - Monthly sales aggregation
-- `GET /getregionrevenyesummary` - Regional revenue breakdown
-
-## Database Collections
-1. `transactions` - Raw transaction data
-2. `region_revenue_summary` - Aggregated regional metrics
-3. `country_product_summary` - Country-wise product performance
-4. `monthly_sales_summary` - Monthly sales aggregations
-
-## Setup
-
-### Installation
+### 📦 Installation
 ```bash
 git clone <repository-url>
 cd revenue-dashboard
 ```
 
-### Configuration
-you can modify the configuration in the config.go located in /app/internal/config
+### 🔧 Configuration
+You can modify the configuration in the `config.go` located in `/app/internal/config`
 
-## Data Ingestion
-Navigate to cmd/ingest
+## 🚀 API Endpoints
 
-Run - ```bash go run main.go <path_to_input.csv>  ```
+### Start API Server
+Navigate to `cmd/server`
+```bash
+go run main.go
+```
+> 💡 You can also build the binary and run this. This will start the web server
 
-- You can also build the binary and run this
+Navigate to `cmd/server`
+
+### 🔗 Available Endpoints
+| Endpoint | Description |
+|----------|-------------|
+| `GET /getfrequentlypurchasedproducts` | Most popular products |
+| `GET /getcountrylevelrevenue` | Country-wise product performance |
+| `GET /getmonthlysalessummary` | Monthly sales aggregation |
+| `GET /getregionrevenyesummary` | Regional revenue breakdown |
+
+## 📊 Data Ingestion
+
+Navigate to `cmd/ingest`
+
+Run:
+```bash
+go run main.go <path_to_input.csv>
+```
+
+> 💡 You can also build the binary and run this. This will read the file from the disk and aggregates the data to mongo
 
 The system processes CSV files through a worker pool of go routines and pre-aggregates data into summary collections for optimized read performance.
 
-### Run test cases
+## 🧪 Run Test Cases
 
-```bash make test ``` 
+```bash
+make test
+```
 
-For better view
+### For Better View
+```bash
+go test -coverprofile=test_coverage/coverage.out ./internal/app/repositories && go tool cover -html=test_coverage/coverage.out -o test_coverage/repositories_coverage.html
+```
 
-``` bash go test -coverprofile=test_coverage/coverage.out ./internal/app/repositories && go tool cover -html=test_coverage/coverage.out -o test_coverage/repositories_coverage.html ```
+## 🔍 Run Lint
 
+```bash
+make lint
+```
 
