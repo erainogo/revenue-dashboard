@@ -4,7 +4,8 @@ high-performance dashboard to analyze and visualize key business metrics from a 
 
 ### system-design
 
-<img width="1408" alt="Screenshot 2025-06-15 at 22 01 21" src="https://github.com/user-attachments/assets/4e8efd8a-f57f-43e6-927e-52d0b28d30ea" />
+<img width="1358" alt="Screenshot 2025-06-16 at 07 10 34" src="https://github.com/user-attachments/assets/132e27d3-3857-4922-83de-e07e685c931a" />
+
 
 
 
