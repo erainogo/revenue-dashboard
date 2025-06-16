@@ -43,8 +43,6 @@ go run main.go
 ```
 > 💡 You can also build the binary and run this. This will start the web server
 
-Navigate to `cmd/server`
-
 ### 🔗 Available Endpoints
 | Endpoint | Description |
 |----------|-------------|
