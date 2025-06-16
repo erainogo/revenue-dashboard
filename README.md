@@ -32,7 +32,7 @@ cd revenue-dashboard
 ```
 
 ### 🔧 Configuration
-You can modify the configuration in the `config.go` located in `/app/internal/config`
+You can modify the configuration in the `config.go` located in `/internal/app/config`
 
 ## 🚀 API Endpoints
 
