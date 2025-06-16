@@ -41,7 +41,7 @@ Navigate to `cmd/server`
 ```bash
 go run main.go
 ```
-> 💡 You can also build the binary and run this. This will start the web server
+> 💡 You can also build the binary and run this. This will start the web server at port 8090
 
 ### 🔗 Available Endpoints
 | Endpoint | Description |
