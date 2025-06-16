@@ -81,3 +81,13 @@ go test -coverprofile=test_coverage/coverage.out ./internal/app/repositories && 
 make lint
 ```
 
+## 🐳 Docker
+
+### Build Docker images
+
+```bash
+make docker-web-build
+```
+
+> Building the docker image will create the compiled binary in the build folder. Also you can deploy a container if you want to run the application on docker
+
