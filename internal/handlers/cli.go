@@ -121,7 +121,7 @@ func (s *Cli) Ingest(ctx context.Context, inputPath string) error {
 	// after file data ingestion is done, those maps are being inserted here as upsert bulks. (using upsert bulk bcz future imports might include the same product, etc...)
 	// doing this to reduce calculating data when fetching via API
 	// also easy to cache for the frond-end in the future
-	// if we want these data to be updated real time, ( if file ingestion happens more often we have to update the summaries )
+	// if we want these data to be updated real time, ( if ingestion happens more often we have to update the summaries )
 	// we can deploy background thread to update the db.
 	err = s.service.IngestCountrySummery(ctx)
 	if err != nil {
